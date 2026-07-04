@@ -47,7 +47,12 @@ jobs:
       # ── 5. Install npm dependencies ──────────────────────────────────────────
       - name: Install dependencies
         run: |
-  npm cache clean --force
+  - name: Install dependencies
+  run: |
+    npm config set fetch-retries 5
+    npm config set fetch-retry-factor 2
+    npm config set fetch-retry-maxtimeout 120000
+    npm install || npm install
   npm install --legacy-peer-deps
 
       # ── 6. Install Capacitor packages ────────────────────────────────────────
