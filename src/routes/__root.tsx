@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "All-in-one Amazon seller dashboard: profit, FBA fee, ROI and break-even calculators, inventory tracker, and sales analytics.",
       },
-      { property: "og:title", content: "Amazon Seller Toolkit" },
+      { property: "og:title", content: "Amazon Seller Toolkit — Profit, FBA & ROI Calculators" },
       {
         property: "og:description",
         content:
@@ -92,6 +92,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Amazon Seller Toolkit — Profit, FBA & ROI Calculators" },
+      { name: "description", content: "All-in-one Amazon seller dashboard: profit, FBA fee, ROI and break-even calculators, inventory tracker, and sales analytics." },
+      { property: "og:description", content: "All-in-one Amazon seller dashboard: profit, FBA fee, ROI and break-even calculators, inventory tracker, and sales analytics." },
+      { name: "twitter:description", content: "All-in-one Amazon seller dashboard: profit, FBA fee, ROI and break-even calculators, inventory tracker, and sales analytics." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/7d76b4d1-e871-4857-ab61-9edba06c0054" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/7d76b4d1-e871-4857-ab61-9edba06c0054" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
