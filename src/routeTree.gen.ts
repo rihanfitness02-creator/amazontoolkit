@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppProfitRouteImport } from './routes/_app.profit'
+import { Route as AppFbaRouteImport } from './routes/_app.fba'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 
 const AuthRoute = AuthRouteImport.update({
@@ -34,6 +35,11 @@ const AppProfitRoute = AppProfitRouteImport.update({
   path: '/profit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFbaRoute = AppFbaRouteImport.update({
+  id: '/fba',
+  path: '/fba',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -44,12 +50,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AppDashboardRoute
+  '/fba': typeof AppFbaRoute
   '/profit': typeof AppProfitRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AppDashboardRoute
+  '/fba': typeof AppFbaRoute
   '/profit': typeof AppProfitRoute
 }
 export interface FileRoutesById {
@@ -58,14 +66,22 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/fba': typeof AppFbaRoute
   '/_app/profit': typeof AppProfitRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/profit'
+  fullPaths: '/' | '/auth' | '/dashboard' | '/fba' | '/profit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/profit'
-  id: '__root__' | '/' | '/_app' | '/auth' | '/_app/dashboard' | '/_app/profit'
+  to: '/' | '/auth' | '/dashboard' | '/fba' | '/profit'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/auth'
+    | '/_app/dashboard'
+    | '/_app/fba'
+    | '/_app/profit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -104,6 +120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfitRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/fba': {
+      id: '/_app/fba'
+      path: '/fba'
+      fullPath: '/fba'
+      preLoaderRoute: typeof AppFbaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -116,11 +139,13 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
+  AppFbaRoute: typeof AppFbaRoute
   AppProfitRoute: typeof AppProfitRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
+  AppFbaRoute: AppFbaRoute,
   AppProfitRoute: AppProfitRoute,
 }
 
