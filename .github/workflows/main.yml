@@ -330,12 +330,7 @@ jobs:
 
       # ── 25. (Optional) Sign release APK when keystore secrets are present ────
       - name: Sign release APK
-        if: >
-          github.event_name != 'pull_request' &&
-          secrets.KEYSTORE_BASE64 != '' &&
-          secrets.KEYSTORE_PASSWORD != '' &&
-          secrets.KEY_ALIAS != '' &&
-          secrets.KEY_PASSWORD != ''
+        if: github.event_name != 'pull_request' && env.KEYSTORE_BASE64 != ''
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -344,7 +339,6 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > release.jks
 
-          # Build signed release APK
           cd android
           ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/release.jks \
@@ -354,12 +348,9 @@ jobs:
             --no-daemon
 
       - name: Upload signed release APK
-        if: >
-          github.event_name != 'pull_request' &&
-          secrets.KEYSTORE_BASE64 != '' &&
-          secrets.KEYSTORE_PASSWORD != '' &&
-          secrets.KEY_ALIAS != '' &&
-          secrets.KEY_PASSWORD != ''
+        if: github.event_name != 'pull_request' && env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         uses: actions/upload-artifact@v4
         with:
           name: seller-toolkit-signed-release-apk
