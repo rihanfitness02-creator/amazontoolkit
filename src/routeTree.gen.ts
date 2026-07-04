@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRoiRouteImport } from './routes/_app.roi'
 import { Route as AppProfitRouteImport } from './routes/_app.profit'
+import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
 import { Route as AppFbaRouteImport } from './routes/_app.fba'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppBreakevenRouteImport } from './routes/_app.breakeven'
@@ -42,6 +43,11 @@ const AppProfitRoute = AppProfitRouteImport.update({
   path: '/profit',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInventoryRoute = AppInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFbaRoute = AppFbaRouteImport.update({
   id: '/fba',
   path: '/fba',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/breakeven': typeof AppBreakevenRoute
   '/dashboard': typeof AppDashboardRoute
   '/fba': typeof AppFbaRoute
+  '/inventory': typeof AppInventoryRoute
   '/profit': typeof AppProfitRoute
   '/roi': typeof AppRoiRoute
 }
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/breakeven': typeof AppBreakevenRoute
   '/dashboard': typeof AppDashboardRoute
   '/fba': typeof AppFbaRoute
+  '/inventory': typeof AppInventoryRoute
   '/profit': typeof AppProfitRoute
   '/roi': typeof AppRoiRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/_app/breakeven': typeof AppBreakevenRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/fba': typeof AppFbaRoute
+  '/_app/inventory': typeof AppInventoryRoute
   '/_app/profit': typeof AppProfitRoute
   '/_app/roi': typeof AppRoiRoute
 }
@@ -95,10 +104,19 @@ export interface FileRouteTypes {
     | '/breakeven'
     | '/dashboard'
     | '/fba'
+    | '/inventory'
     | '/profit'
     | '/roi'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/breakeven' | '/dashboard' | '/fba' | '/profit' | '/roi'
+  to:
+    | '/'
+    | '/auth'
+    | '/breakeven'
+    | '/dashboard'
+    | '/fba'
+    | '/inventory'
+    | '/profit'
+    | '/roi'
   id:
     | '__root__'
     | '/'
@@ -107,6 +125,7 @@ export interface FileRouteTypes {
     | '/_app/breakeven'
     | '/_app/dashboard'
     | '/_app/fba'
+    | '/_app/inventory'
     | '/_app/profit'
     | '/_app/roi'
   fileRoutesById: FileRoutesById
@@ -154,6 +173,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfitRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/inventory': {
+      id: '/_app/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AppInventoryRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/fba': {
       id: '/_app/fba'
       path: '/fba'
@@ -182,6 +208,7 @@ interface AppRouteChildren {
   AppBreakevenRoute: typeof AppBreakevenRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppFbaRoute: typeof AppFbaRoute
+  AppInventoryRoute: typeof AppInventoryRoute
   AppProfitRoute: typeof AppProfitRoute
   AppRoiRoute: typeof AppRoiRoute
 }
@@ -190,6 +217,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBreakevenRoute: AppBreakevenRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppFbaRoute: AppFbaRoute,
+  AppInventoryRoute: AppInventoryRoute,
   AppProfitRoute: AppProfitRoute,
   AppRoiRoute: AppRoiRoute,
 }
