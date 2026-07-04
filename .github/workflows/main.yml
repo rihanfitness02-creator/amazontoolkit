@@ -1,1 +1,368 @@
+name: Android APK & AAB Build
 
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build APK and AAB
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Node.js ───────────────────────────────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # ── 3. Java (required by Gradle) ─────────────────────────────────────────
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # ── 4. Android SDK ───────────────────────────────────────────────────────
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK platform and build tools
+        run: |
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            "extras;android;m2repository" \
+            "extras;google;m2repository"
+
+      # ── 5. Install npm dependencies ──────────────────────────────────────────
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 6. Install Capacitor packages ────────────────────────────────────────
+      - name: Install Capacitor
+        run: |
+          npm install --save-exact \
+            @capacitor/core@latest \
+            @capacitor/android@latest \
+            @capacitor/cli@latest \
+            @capacitor/status-bar@latest \
+            @capacitor/splash-screen@latest \
+            @capacitor/keyboard@latest
+
+      # ── 7. Create Capacitor config ───────────────────────────────────────────
+      - name: Create capacitor.config.ts
+        run: |
+          cat > capacitor.config.ts << 'EOF'
+          import type { CapacitorConfig } from "@capacitor/cli";
+          const config: CapacitorConfig = {
+            appId: "com.sellertoolkit.app",
+            appName: "Seller Toolkit",
+            webDir: "dist/mobile",
+            bundledWebRuntime: false,
+            plugins: {
+              SplashScreen: {
+                launchShowDuration: 1500,
+                backgroundColor: "#1e293b",
+                showSpinner: false,
+              },
+              StatusBar: {
+                style: "Dark",
+                backgroundColor: "#1e293b",
+              },
+              Keyboard: {
+                resize: "body",
+                resizeOnFullScreen: true,
+              },
+            },
+          };
+          export default config;
+          EOF
+
+      # ── 8. Create mobile HTML shell ──────────────────────────────────────────
+      - name: Create index.mobile.html
+        run: |
+          cat > index.mobile.html << 'EOF'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+              <meta name="mobile-web-app-capable" content="yes" />
+              <meta name="apple-mobile-web-app-capable" content="yes" />
+              <title>Seller Toolkit</title>
+              <link rel="icon" href="/favicon.ico" />
+            </head>
+            <body>
+              <div id="root"></div>
+              <script type="module" src="/src/mobile-main.tsx"></script>
+            </body>
+          </html>
+          EOF
+
+      # ── 9. Create mobile root route (no SSR APIs) ─────────────────────────────
+      - name: Create mobile root route
+        run: |
+          cat > src/routes/__root.mobile.tsx << 'EOF'
+          import { QueryClient } from "@tanstack/react-query";
+          import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+          export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+            component: () => <Outlet />,
+          });
+          EOF
+
+      # ── 10. Create mobile route tree ─────────────────────────────────────────
+      - name: Create mobile-routeTree.ts
+        run: |
+          cat > src/mobile-routeTree.ts << 'EOF'
+          import { Route as rootRouteImport } from "./routes/__root.mobile";
+          import { Route as AuthRouteImport } from "./routes/auth";
+          import { Route as AppRouteImport } from "./routes/_app";
+          import { Route as IndexRouteImport } from "./routes/index";
+          import { Route as AppRoiRouteImport } from "./routes/_app.roi";
+          import { Route as AppProfitRouteImport } from "./routes/_app.profit";
+          import { Route as AppInventoryRouteImport } from "./routes/_app.inventory";
+          import { Route as AppFbaRouteImport } from "./routes/_app.fba";
+          import { Route as AppDashboardRouteImport } from "./routes/_app.dashboard";
+          import { Route as AppBreakevenRouteImport } from "./routes/_app.breakeven";
+
+          const AuthRoute = AuthRouteImport.update({ id: "/auth", path: "/auth", getParentRoute: () => rootRouteImport } as never);
+          const AppRoute = AppRouteImport.update({ id: "/_app", getParentRoute: () => rootRouteImport } as never);
+          const IndexRoute = IndexRouteImport.update({ id: "/", path: "/", getParentRoute: () => rootRouteImport } as never);
+          const AppRoiRoute = AppRoiRouteImport.update({ id: "/roi", path: "/roi", getParentRoute: () => AppRoute } as never);
+          const AppProfitRoute = AppProfitRouteImport.update({ id: "/profit", path: "/profit", getParentRoute: () => AppRoute } as never);
+          const AppInventoryRoute = AppInventoryRouteImport.update({ id: "/inventory", path: "/inventory", getParentRoute: () => AppRoute } as never);
+          const AppFbaRoute = AppFbaRouteImport.update({ id: "/fba", path: "/fba", getParentRoute: () => AppRoute } as never);
+          const AppDashboardRoute = AppDashboardRouteImport.update({ id: "/dashboard", path: "/dashboard", getParentRoute: () => AppRoute } as never);
+          const AppBreakevenRoute = AppBreakevenRouteImport.update({ id: "/breakeven", path: "/breakeven", getParentRoute: () => AppRoute } as never);
+
+          const AppRouteWithChildren = AppRoute._addFileChildren({
+            AppBreakevenRoute, AppDashboardRoute, AppFbaRoute,
+            AppInventoryRoute, AppProfitRoute, AppRoiRoute,
+          });
+
+          export const mobileRouteTree = rootRouteImport._addFileChildren({
+            IndexRoute, AppRoute: AppRouteWithChildren, AuthRoute,
+          });
+          EOF
+
+      # ── 11. Create mobile entry point ─────────────────────────────────────────
+      - name: Create mobile-main.tsx
+        run: |
+          cat > src/mobile-main.tsx << 'EOF'
+          import { StrictMode } from "react";
+          import { createRoot } from "react-dom/client";
+          import { RouterProvider, createHashHistory, createRouter } from "@tanstack/react-router";
+          import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+          import { mobileRouteTree } from "./mobile-routeTree";
+          import { AuthProvider } from "@/lib/auth";
+          import { ThemeProvider } from "@/lib/theme";
+          import { Toaster } from "@/components/ui/sonner";
+          import "./styles.css";
+
+          const hashHistory = createHashHistory();
+          const queryClient = new QueryClient();
+
+          const router = createRouter({
+            routeTree: mobileRouteTree,
+            history: hashHistory,
+            context: { queryClient },
+            defaultPreloadStaleTime: 0,
+          });
+
+          declare module "@tanstack/react-router" {
+            interface Register { router: typeof router; }
+          }
+
+          async function initCapacitor() {
+            try {
+              const { SplashScreen } = await import("@capacitor/splash-screen");
+              const { StatusBar, Style } = await import("@capacitor/status-bar");
+              await SplashScreen.hide({ fadeOutDuration: 300 });
+              await StatusBar.setStyle({ style: Style.Dark });
+            } catch { /* browser fallback */ }
+          }
+
+          const container = document.getElementById("root");
+          if (!container) throw new Error("Root element not found");
+
+          createRoot(container).render(
+            <StrictMode>
+              <QueryClientProvider client={queryClient}>
+                <ThemeProvider>
+                  <AuthProvider>
+                    <RouterProvider router={router} />
+                    <Toaster />
+                  </AuthProvider>
+                </ThemeProvider>
+              </QueryClientProvider>
+            </StrictMode>
+          );
+
+          initCapacitor();
+          EOF
+
+      # ── 12. Create mobile Vite config ─────────────────────────────────────────
+      - name: Create vite.mobile.config.ts
+        run: |
+          cat > vite.mobile.config.ts << 'VITEEOF'
+          import { defineConfig, type Plugin } from "vite";
+          import react from "@vitejs/plugin-react";
+          import tailwindcss from "@tailwindcss/vite";
+          import tsconfigPaths from "vite-tsconfig-paths";
+          import path from "node:path";
+          import { writeFileSync, readFileSync } from "node:fs";
+
+          function renameHtmlPlugin(): Plugin {
+            return {
+              name: "rename-mobile-html",
+              closeBundle() {
+                const src = path.resolve(__dirname, "dist/mobile/index.mobile.html");
+                const dest = path.resolve(__dirname, "dist/mobile/index.html");
+                try {
+                  writeFileSync(dest, readFileSync(src, "utf8"));
+                  import("node:fs").then((fs) => fs.unlinkSync(src));
+                } catch { /* already renamed */ }
+              },
+            };
+          }
+
+          export default defineConfig({
+            plugins: [react(), tailwindcss(), tsconfigPaths(), renameHtmlPlugin()],
+            build: {
+              outDir: "dist/mobile",
+              emptyOutDir: true,
+              rollupOptions: { input: path.resolve(__dirname, "index.mobile.html") },
+            },
+            resolve: { alias: { "@": path.resolve(__dirname, "src") } },
+          });
+          VITEEOF
+
+      # ── 13. Build the mobile SPA ──────────────────────────────────────────────
+      - name: Build mobile web assets
+        run: npx vite build --config vite.mobile.config.ts
+
+      # ── 14. Verify index.html produced ───────────────────────────────────────
+      - name: Verify dist/mobile/index.html exists
+        run: |
+          ls -lh dist/mobile/
+          test -f dist/mobile/index.html || { echo "ERROR: index.html missing"; exit 1; }
+
+      # ── 15. Add Android platform ──────────────────────────────────────────────
+      - name: Add Android platform via Capacitor
+        run: npx cap add android
+
+      # ── 16. Sync web assets into Android project ──────────────────────────────
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      # ── 17. Apply brand colors ───────────────────────────────────────────────
+      - name: Apply brand colors to Android resources
+        run: |
+          cat > android/app/src/main/res/values/colors.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+            <color name="colorPrimary">#146EB4</color>
+            <color name="colorPrimaryDark">#0F5590</color>
+            <color name="colorAccent">#FF9900</color>
+          </resources>
+          EOF
+
+      # ── 18. Make Gradle wrapper executable ───────────────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      # ── 19. Cache Gradle dependencies ────────────────────────────────────────
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # ── 20. Build debug APK ───────────────────────────────────────────────────
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      # ── 21. Build release AAB (unsigned) ─────────────────────────────────────
+      - name: Build release AAB
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
+
+      # ── 22. List build outputs ────────────────────────────────────────────────
+      - name: List build outputs
+        run: |
+          echo "=== APK ==="
+          find android/app/build/outputs/apk -name "*.apk" -exec ls -lh {} \;
+          echo "=== AAB ==="
+          find android/app/build/outputs/bundle -name "*.aab" -exec ls -lh {} \;
+
+      # ── 23. Upload debug APK artifact ────────────────────────────────────────
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: seller-toolkit-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      # ── 24. Upload release AAB artifact ──────────────────────────────────────
+      - name: Upload release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: seller-toolkit-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+          if-no-files-found: error
+
+      # ── 25. (Optional) Sign release APK when keystore secrets are present ────
+      - name: Sign release APK
+        if: >
+          github.event_name != 'pull_request' &&
+          secrets.KEYSTORE_BASE64 != '' &&
+          secrets.KEYSTORE_PASSWORD != '' &&
+          secrets.KEY_ALIAS != '' &&
+          secrets.KEY_PASSWORD != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > release.jks
+
+          # Build signed release APK
+          cd android
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/release.jks \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            --no-daemon
+
+      - name: Upload signed release APK
+        if: >
+          github.event_name != 'pull_request' &&
+          secrets.KEYSTORE_BASE64 != '' &&
+          secrets.KEYSTORE_PASSWORD != '' &&
+          secrets.KEY_ALIAS != '' &&
+          secrets.KEY_PASSWORD != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: seller-toolkit-signed-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+          if-no-files-found: warn
