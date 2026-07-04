@@ -9,38 +9,149 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRoiRouteImport } from './routes/_app.roi'
+import { Route as AppProfitRouteImport } from './routes/_app.profit'
+import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
+import { Route as AppFbaRouteImport } from './routes/_app.fba'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppBreakevenRouteImport } from './routes/_app.breakeven'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoiRoute = AppRoiRouteImport.update({
+  id: '/roi',
+  path: '/roi',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfitRoute = AppProfitRouteImport.update({
+  id: '/profit',
+  path: '/profit',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInventoryRoute = AppInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFbaRoute = AppFbaRouteImport.update({
+  id: '/fba',
+  path: '/fba',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBreakevenRoute = AppBreakevenRouteImport.update({
+  id: '/breakeven',
+  path: '/breakeven',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/breakeven': typeof AppBreakevenRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/fba': typeof AppFbaRoute
+  '/inventory': typeof AppInventoryRoute
+  '/profit': typeof AppProfitRoute
+  '/roi': typeof AppRoiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/breakeven': typeof AppBreakevenRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/fba': typeof AppFbaRoute
+  '/inventory': typeof AppInventoryRoute
+  '/profit': typeof AppProfitRoute
+  '/roi': typeof AppRoiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_app/breakeven': typeof AppBreakevenRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/fba': typeof AppFbaRoute
+  '/_app/inventory': typeof AppInventoryRoute
+  '/_app/profit': typeof AppProfitRoute
+  '/_app/roi': typeof AppRoiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/breakeven'
+    | '/dashboard'
+    | '/fba'
+    | '/inventory'
+    | '/profit'
+    | '/roi'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/breakeven'
+    | '/dashboard'
+    | '/fba'
+    | '/inventory'
+    | '/profit'
+    | '/roi'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/auth'
+    | '/_app/breakeven'
+    | '/_app/dashboard'
+    | '/_app/fba'
+    | '/_app/inventory'
+    | '/_app/profit'
+    | '/_app/roi'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +159,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/roi': {
+      id: '/_app/roi'
+      path: '/roi'
+      fullPath: '/roi'
+      preLoaderRoute: typeof AppRoiRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profit': {
+      id: '/_app/profit'
+      path: '/profit'
+      fullPath: '/profit'
+      preLoaderRoute: typeof AppProfitRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inventory': {
+      id: '/_app/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AppInventoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/fba': {
+      id: '/_app/fba'
+      path: '/fba'
+      fullPath: '/fba'
+      preLoaderRoute: typeof AppFbaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/breakeven': {
+      id: '/_app/breakeven'
+      path: '/breakeven'
+      fullPath: '/breakeven'
+      preLoaderRoute: typeof AppBreakevenRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppBreakevenRoute: typeof AppBreakevenRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppFbaRoute: typeof AppFbaRoute
+  AppInventoryRoute: typeof AppInventoryRoute
+  AppProfitRoute: typeof AppProfitRoute
+  AppRoiRoute: typeof AppRoiRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppBreakevenRoute: AppBreakevenRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppFbaRoute: AppFbaRoute,
+  AppInventoryRoute: AppInventoryRoute,
+  AppProfitRoute: AppProfitRoute,
+  AppRoiRoute: AppRoiRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
