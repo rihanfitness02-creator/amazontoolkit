@@ -47,13 +47,10 @@ jobs:
       # ── 5. Install npm dependencies ──────────────────────────────────────────
       - name: Install dependencies
         run: |
-  - name: Install dependencies
-  run: |
-    npm config set fetch-retries 5
-    npm config set fetch-retry-factor 2
-    npm config set fetch-retry-maxtimeout 120000
-    npm install || npm install
-  npm install --legacy-peer-deps
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-maxtimeout 120000
+          npm install
 
       # ── 6. Install Capacitor packages ────────────────────────────────────────
       - name: Install Capacitor
@@ -264,15 +261,11 @@ jobs:
           ls -lh dist/mobile/
           test -f dist/mobile/index.html || { echo "ERROR: index.html missing"; exit 1; }
 
-      # ── 15. Add Android platform ──────────────────────────────────────────────
-      - name: Add Android platform via Capacitor
-        run: npx cap add android
-
-      # ── 16. Sync web assets into Android project ──────────────────────────────
+      # ── 15. Sync web assets into Android project ──────────────────────────────
       - name: Sync Capacitor
         run: npx cap sync android
 
-      # ── 17. Apply brand colors ───────────────────────────────────────────────
+      # ── 16. Apply brand colors ───────────────────────────────────────────────
       - name: Apply brand colors to Android resources
         run: |
           cat > android/app/src/main/res/values/colors.xml << 'EOF'
@@ -284,11 +277,11 @@ jobs:
           </resources>
           EOF
 
-      # ── 18. Make Gradle wrapper executable ───────────────────────────────────
+      # ── 17. Make Gradle wrapper executable ───────────────────────────────────
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # ── 19. Cache Gradle dependencies ────────────────────────────────────────
+      # ── 18. Cache Gradle dependencies ────────────────────────────────────────
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -299,17 +292,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # ── 20. Build debug APK ───────────────────────────────────────────────────
+      # ── 19. Build debug APK ───────────────────────────────────────────────────
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      # ── 21. Build release AAB (unsigned) ─────────────────────────────────────
+      # ── 20. Build release AAB (unsigned) ─────────────────────────────────────
       - name: Build release AAB
         working-directory: android
         run: ./gradlew bundleRelease --no-daemon --stacktrace
 
-      # ── 22. List build outputs ────────────────────────────────────────────────
+      # ── 21. List build outputs ────────────────────────────────────────────────
       - name: List build outputs
         run: |
           echo "=== APK ==="
@@ -317,7 +310,7 @@ jobs:
           echo "=== AAB ==="
           find android/app/build/outputs/bundle -name "*.aab" -exec ls -lh {} \;
 
-      # ── 23. Upload debug APK artifact ────────────────────────────────────────
+      # ── 22. Upload debug APK artifact ────────────────────────────────────────
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -326,7 +319,7 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      # ── 24. Upload release AAB artifact ──────────────────────────────────────
+      # ── 23. Upload release AAB artifact ──────────────────────────────────────
       - name: Upload release AAB
         uses: actions/upload-artifact@v4
         with:
@@ -335,7 +328,7 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      # ── 25. (Optional) Sign release APK when keystore secrets are present ────
+      # ── 24. (Optional) Sign release APK when keystore secrets are present ────
       - name: Sign release APK
         if: github.event_name != 'pull_request' && env.KEYSTORE_BASE64 != ''
         env:
@@ -345,7 +338,6 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > release.jks
-
           cd android
           ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/release.jks \
